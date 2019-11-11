@@ -17,7 +17,6 @@ Resource type defines the resource to be controlled, for example::
 
 - group
 - role
-- policy
 - aws.account
 - openshift.cluster
 
@@ -62,6 +61,6 @@ Permissions for Role API access
 A user can be given access to view (read) roles or create/update (write) roles.
 Below are the valid permissions for reading or writing roles. Write permissions implies read permission.
 
-Read policy -``rbac:role:read``
+Read access -``rbac:role:read``
 
-Write policy - ``rbac:role:write``
+Write access - ``rbac:role:write``

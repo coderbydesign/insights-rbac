@@ -1,7 +1,7 @@
 Managing Groups
 ###############
 
-A group is a collection of principals used to grant access to a resource. A principal can be a member of many groups. Groups are associated with roles with a policy. A group can be associated with multiple policies.
+A group is a collection of principals used to grant access to a resource. A principal can be a member of many groups. Groups are associated with roles.
 
 Permissions for Group API access
 ********************************
