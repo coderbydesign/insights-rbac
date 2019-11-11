@@ -91,16 +91,12 @@ class AccessViewTests(IdentityRequest):
     def create_policy(self, policy_name, group, roles, status=status.HTTP_201_CREATED):
         """Create a policy."""
         # create a policy
-        test_data = {
-            'name': policy_name,
-            'group': group,
-            'roles': roles
-        }
-        url = reverse('policy-list')
-        client = APIClient()
-        response = client.post(url, test_data, format='json', **self.headers)
-        self.assertEqual(response.status_code, status)
-        return response
+        policy = Policy.objects.create(name=policy_name, group=group)
+        roles = Role.objects.filter(uuid__in=roles)
+        policy.roles.set(roles)
+        policy.save()
+
+        return policy
 
     def test_get_access_success(self):
         """Test that we can obtain the expected access."""
@@ -109,7 +105,7 @@ class AccessViewTests(IdentityRequest):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         role_uuid = response.data.get('uuid')
         policy_name = 'policyA'
-        response = self.create_policy(policy_name, self.group.uuid, [role_uuid])
+        self.create_policy(policy_name, self.group, [role_uuid])
 
         # test that we can retrieve the principal access
         url = '{}?application={}&username={}'.format(reverse('access'),

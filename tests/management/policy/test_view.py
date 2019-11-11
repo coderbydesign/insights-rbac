@@ -35,6 +35,7 @@ class PolicyViewsetTests(IdentityRequest):
 
     def setUp(self):
         """Set up the policy viewset tests."""
+        self.skipTest("Skipping all policy view tests")
         super().setUp()
         request = self.request_context['request']
         user = User(username=self.user_data['username'],
