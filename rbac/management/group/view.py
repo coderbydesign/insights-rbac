@@ -184,7 +184,12 @@ class GroupViewSet(mixins.CreateModelMixin,
                 "uuid": "16fd2706-8baf-433b-82eb-8c7fada847da",
                 "name": "GroupA",
                 "principals": [
-                    { "username": "jsmith" }
+                    { "username": "jsmith" },
+                "roles": [
+                    {
+                        "name": "RoleA",
+                        "uuid": "4df211e0-2d88-49a4-8802-728630224d15"
+                    }
                 ]
             }
         """
