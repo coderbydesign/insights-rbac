@@ -18,6 +18,7 @@
 """View for group management."""
 import logging
 
+from django.core.exceptions import ValidationError
 from django.db.models.aggregates import Count
 from django.utils.translation import gettext as _
 from django_filters import rest_framework as filters
@@ -26,9 +27,12 @@ from management.group.serializer import (GroupInputSerializer,
                                          GroupPrincipalInputSerializer,
                                          GroupSerializer)
 from management.permissions import GroupAccessPermission
+from management.policy.model import Policy
 from management.principal.model import Principal
 from management.principal.proxy import PrincipalProxy
 from management.querysets import get_group_queryset
+from management.role.model import Role
+from management.role.serializer import RoleMinimumSerializer
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
@@ -184,7 +188,10 @@ class GroupViewSet(mixins.CreateModelMixin,
                 "uuid": "16fd2706-8baf-433b-82eb-8c7fada847da",
                 "name": "GroupA",
                 "principals": [
-                    { "username": "jsmith" },
+                    {
+                        "username": "jsmith"
+                    }
+                ],
                 "roles": [
                     {
                         "name": "RoleA",
@@ -339,3 +346,107 @@ class GroupViewSet(mixins.CreateModelMixin,
             principals = [name.strip() for name in username.split(',')]
             self.remove_principals(group, principals, account)
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def serialized_roles(self, group):
+        """Return a list of serailized roles for a group."""
+        return [RoleMinimumSerializer(role).data for role in group.roles()]
+
+    def add_roles(self, group, role_ids):
+        """Process list of roles and add them to the group."""
+        system_policy, system_policy_created = Policy.objects.get_or_create(system=True, group=group)
+        if system_policy_created:
+            logger.info('Created new system policy for tenant.')
+
+        for role_id in role_ids:
+            try:
+                role = Role.objects.get(uuid=role_id)
+                system_policy.roles.add(role)
+            except ValidationError:
+                logger.info('Invalid uuid %s adding role to system policy.', role_id)
+
+        system_policy.save()
+
+    def remove_roles(self, group, role_ids):
+        """Process list of roles and remove them from the group."""
+        roles = []
+        for role_id in role_ids:
+            try:
+                role = Role.objects.get(uuid=role_id)
+                roles.append(role)
+            except (Role.DoesNotExist, ValidationError):
+                logger.info('No role with id %s to delete.', role_id)
+
+        for policy in group.policies.all():
+            policy.roles.remove(*roles)
+            policy.save()
+
+    @action(detail=True, methods=['get', 'post', 'delete'])
+    def roles(self, request, uuid=None):
+        """Add or remove roles from a group.
+
+        @api {post} /api/v1/groups/:uuid/roles/   Add roles to a group
+        @apiName addRoles
+        @apiGroup Group
+        @apiVersion 1.0.0
+        @apiDescription Add roles to a group
+
+        @apiHeader {String} token User authorization token
+
+        @apiParam (Path) {String} id Group unique identifier
+
+        @apiParam (Request Body) {Array} roles Array of role UUIDs
+        @apiParamExample {json} Request Body:
+            {
+                "roles": [
+                    "4df211e0-2d88-49a4-8802-728630224d15"
+                ]
+            }
+
+        @apiSuccess {String} uuid Group unique identifier
+        @apiSuccess {String} name Group name
+        @apiSuccess {Array} roles Array of roles
+        @apiSuccessExample {json} Success-Response:
+            HTTP/1.1 200 OK
+            {
+                "roles": [
+                    {
+                        "name": "RoleA",
+                        "uuid": "4df211e0-2d88-49a4-8802-728630224d15"
+                    }
+                ]
+            }
+        """
+        """
+        @api {delete} /api/v1/groups/:uuid/roles/   Remove roles from group
+        @apiName removeRoles
+        @apiGroup Group
+        @apiVersion 1.0.0
+        @apiDescription Remove roles from a group
+
+        @apiHeader {String} token User authorization token
+
+        @apiParam (Path) {String} id Group unique identifier
+
+        @apiParam (Request Body) {Array} roles Array of role UUIDs
+        @apiParamExample {json} Request Body:
+            {
+                "roles": [
+                    "4df211e0-2d88-49a4-8802-728630224d15"
+                ]
+            }
+
+        @apiSuccessExample {json} Success-Response:
+            HTTP/1.1 204 NO CONTENT
+        """
+        role_ids = request.data.pop('roles', [])
+        group = self.get_object()
+        if request.method == 'POST':
+            self.add_roles(group, role_ids)
+            response_data = self.serialized_roles(group)
+        elif request.method == 'GET':
+            response_data = self.serialized_roles(group)
+        else:
+            self.remove_roles(group, role_ids)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(status=status.HTTP_200_OK, data=response_data)
