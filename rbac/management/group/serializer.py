@@ -100,3 +100,23 @@ class GroupPrincipalInputSerializer(serializers.Serializer):
         """Metadata for the serializer."""
 
         fields = ('principals',)
+
+class GroupRoleSerializer(serializers.Serializer):
+    """Serializer for getting roles for a group."""
+
+    roles = serializers.SerializerMethodField()
+    roleCount = serializers.SerializerMethodField()
+
+    def get_roleCount(self, obj):
+        """Role count for the serializer."""
+        return obj.role_count()
+
+    def get_roles(self, obj):
+        """Role constructor for the serializer."""
+        serialized_roles = [RoleMinimumSerializer(role).data for role in obj.roles()]
+        return serialized_roles
+
+    class Meta:
+        """Metadata for the serializer."""
+
+        fields = ('roles', 'roleCount')

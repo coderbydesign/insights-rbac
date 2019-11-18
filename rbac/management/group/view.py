@@ -25,7 +25,8 @@ from django_filters import rest_framework as filters
 from management.group.model import Group
 from management.group.serializer import (GroupInputSerializer,
                                          GroupPrincipalInputSerializer,
-                                         GroupSerializer)
+                                         GroupSerializer,
+                                         GroupRoleSerializer)
 from management.permissions import GroupAccessPermission
 from management.policy.model import Policy
 from management.principal.model import Principal
@@ -347,10 +348,6 @@ class GroupViewSet(mixins.CreateModelMixin,
             self.remove_principals(group, principals, account)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def serialized_roles(self, group):
-        """Return a list of serailized roles for a group."""
-        return [RoleMinimumSerializer(role).data for role in group.roles()]
-
     def add_roles(self, group, role_ids):
         """Process list of roles and add them to the group."""
         system_policy, system_policy_created = Policy.objects.get_or_create(system=True, group=group)
@@ -442,11 +439,11 @@ class GroupViewSet(mixins.CreateModelMixin,
         group = self.get_object()
         if request.method == 'POST':
             self.add_roles(group, role_ids)
-            response_data = self.serialized_roles(group)
+            response_data = GroupRoleSerializer(group)
         elif request.method == 'GET':
-            response_data = self.serialized_roles(group)
+            response_data = GroupRoleSerializer(group)
         else:
             self.remove_roles(group, role_ids)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return Response(status=status.HTTP_200_OK, data=response_data)
+        return Response(status=status.HTTP_200_OK, data=response_data.data)
