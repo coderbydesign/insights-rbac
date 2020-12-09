@@ -41,6 +41,13 @@ def _make_role(tenant, data):
         platform_default=data.get("platform_default", False),
     )
     role, created = Role.objects.get_or_create(name=name, defaults=defaults)
+
+    # after the migration, we could probably set tenant=tenant in the defaults, but initially
+    # we can't because it would try to create duplicate records based on other default values
+    if not role.tenant:
+        role.tenant = tenant
+        role.save()
+
     if created:
         if role.display_name != display_name:
             role.display_name = display_name
@@ -48,7 +55,7 @@ def _make_role(tenant, data):
         logger.info("Created role %s for tenant %s.", name, tenant.schema_name)
     else:
         if role.version != defaults["version"]:
-            Role.objects.filter(name=name).update(**defaults, display_name=display_name)
+            Role.objects.filter(name=name, tenant=tenant).update(**defaults, display_name=display_name)
             logger.info("Updated role %s for tenant %s.", name, tenant.schema_name)
             role.access.all().delete()
         else:

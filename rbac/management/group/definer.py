@@ -42,9 +42,15 @@ def seed_group(tenant):
                 platform_default=True, defaults={"description": group_description, "name": name, "system": True}
             )
 
+            # after the migration, we could probably set tenant=tenant in the defaults, but initially
+            # we can't because it would try to create duplicate records based on other default values
+            if not group.tenant:
+                group.tenant = tenant
+                group.save()
+
             if group.system:
-                platform_roles = Role.objects.filter(platform_default=True)
-                add_roles(group, platform_roles, replace=True)
+                platform_roles = Role.objects.filter(platform_default=True, tenant=tenant)
+                add_roles(group, platform_roles, tenant, replace=True)
                 logger.info("Finished seeding default group %s for tenant %s.", name, tenant.schema_name)
             else:
                 logger.info("Default group %s is managed by tenant %s.", name, tenant.schema_name)
@@ -59,7 +65,7 @@ def set_system_flag_post_update(group):
     group.save()
 
 
-def add_roles(group, roles_or_role_ids, replace=False):
+def add_roles(group, roles_or_role_ids, tenant, replace=False):
     """Process list of roles and add them to the group."""
     system_policy_name = "System Policy for Group {}".format(group.uuid)
     system_policy, system_policy_created = Policy.objects.get_or_create(
@@ -73,7 +79,7 @@ def add_roles(group, roles_or_role_ids, replace=False):
 
     if not isinstance(roles_or_role_ids, QuerySet):
         # If given an iterable of UUIDs, get the corresponding objects
-        roles = Role.objects.filter(uuid__in=roles_or_role_ids)
+        roles = Role.objects.filter(uuid__in=roles_or_role_ids, tenant=tenant)
     else:
         roles = roles_or_role_ids
 
@@ -83,9 +89,9 @@ def add_roles(group, roles_or_role_ids, replace=False):
     system_policy.save()
 
 
-def remove_roles(group, role_ids):
+def remove_roles(group, role_ids, tenant):
     """Process list of roles and remove them from the group."""
-    roles = Role.objects.filter(uuid__in=role_ids)
+    roles = Role.objects.filter(uuid__in=role_ids, tenant=tenant)
 
     for policy in group.policies.all():
         policy.roles.remove(*roles)
