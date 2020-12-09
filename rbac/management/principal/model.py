@@ -19,9 +19,10 @@
 from uuid import uuid4
 
 from django.db import models
+from api.models import TenantAwareModel
 
 
-class Principal(models.Model):
+class Principal(TenantAwareModel):
     """A principal."""
 
     uuid = models.UUIDField(default=uuid4, editable=False, unique=True, null=False)
