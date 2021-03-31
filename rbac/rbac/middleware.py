@@ -26,8 +26,6 @@ from django.db import connections, transaction
 from django.http import Http404, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from management.cache import TenantCache
-from management.group.definer import seed_group  # noqa: I100, I201
-from management.role.definer import seed_permissions, seed_roles
 from management.utils import validate_psk
 from tenant_schemas.middleware import BaseTenantMiddleware
 
@@ -77,11 +75,8 @@ class IdentityHeaderMiddleware(BaseTenantMiddleware):
                     raise Http404()
             else:
                 with transaction.atomic():
-                    tenant, created = Tenant.objects.get_or_create(schema_name=tenant_schema)
-                    if created:
-                        seed_permissions(tenant=tenant)
-                        seed_roles(tenant=tenant)
-                        seed_group(tenant=tenant)
+                    tenant, created = Tenant.objects.select_for_update().get_or_create(schema_name=tenant_schema)
+
             TENANTS.save_tenant(tenant)
         return tenant
 
