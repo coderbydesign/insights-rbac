@@ -33,4 +33,7 @@ urlpatterns = [
     path("api/sentry_debug/", trigger_error),
     path("api/utils/sync_schemas/", views.sync_schemas),
     path("api/utils/populate_tenant_account_id/", views.populate_tenant_account_id),
+    path(
+        "api/tenant/<str:account_number>/principal/<str:principal_username>/groups/", views.tenant_groups_for_principal
+    ),
 ]

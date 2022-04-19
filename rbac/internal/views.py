@@ -37,6 +37,7 @@ from management.tasks import (
 
 from api.models import Tenant
 from api.tasks import cross_account_cleanup, populate_tenant_account_id_in_worker
+from api.serializers import create_tenant_name
 
 
 logger = logging.getLogger(__name__)
@@ -289,3 +290,9 @@ class SentryDiagnosticError(Exception):
 def trigger_error(request):
     """Trigger an error to confirm Sentry is working."""
     raise SentryDiagnosticError
+
+
+def tenant_groups_for_principal(request, account_number, principal_username):
+    tenant_name = create_tenant_name(account_number)
+    print(tenant_name)
+    pass

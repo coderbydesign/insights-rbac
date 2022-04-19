@@ -22,11 +22,13 @@ from json.decoder import JSONDecodeError
 
 from django.conf import settings
 from django.http import HttpResponseForbidden
+from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
 
 from api.common import RH_IDENTITY_HEADER
 from api.models import User
 from api.serializers import extract_header
+from rbac.middleware import IdentityHeaderMiddleware
 
 
 logger = logging.getLogger(__name__)
@@ -57,6 +59,12 @@ class InternalIdentityHeaderMiddleware(MiddlewareMixin):
         except KeyError:
             logger.error("Malformed X-RH-Identity header.")
             return HttpResponseForbidden()
+
+        if request.path == "/_private/api/tenant/10001/principal/user_dev/groups/":
+            request.path = reverse("group-list")
+            # update identity based on headers/path
+
+            return IdentityHeaderMiddleware.process_request(self, request)
 
         request.user = user
 
