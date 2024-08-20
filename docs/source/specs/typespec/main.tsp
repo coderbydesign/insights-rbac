@@ -143,7 +143,7 @@ namespace Workspaces {
 
     enum DepthEnum {
         All: -1,
-        Current: 0,
+        Current: 1,
     }
 
     alias Depth = DepthEnum | uint16;
