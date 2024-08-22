@@ -39,17 +39,17 @@ namespace Problems {
     model ProblemDetails<Status extends valueof int16> {
         @header("content-type") contentType: "application/problem+json";
         type?: ProblemType;
-    
+
         @statusCode _: typeof Status;
         status?: typeof Status;
-        
+
         title?: string;
         detail?: string;
 
         @format("uri")
         instance?: string;
     }
-  
+
     @error
     model Problem403 extends ProblemDetails<Status = 403>{
         type: ProblemType.InsufficientPermission,
@@ -64,7 +64,7 @@ namespace Problems {
         @example("Not found")
         detail: string
     }
-    
+
     alias Problem500 = ProblemDetails<Status = 500>;
 
     @error
@@ -75,7 +75,7 @@ namespace Problems {
     }
 
     alias Problem400AlreadyExists = ProblemDetails<Status = 400>;
-    
+
     alias CommonProblems = Problem401 | Problem403 | Problem500;
 
     namespace Workspace {
@@ -88,7 +88,7 @@ namespace Problems {
 @route("/workspaces")
 @tag("Workspaces")
 @doc("Operations about workspaces")
-namespace Workspaces {    
+namespace Workspaces {
     model BasicWorkspace {
         @doc("Workspace A")
         name: string = "Workspace A";
@@ -98,7 +98,8 @@ namespace Workspaces {
 
     model Workspace {
         @key uuid: UUID;
-        parent?: UUID;
+        parent_id?: UUID;
+        child_ids?: [UUID];
         ...BasicWorkspace;
         ...Timestamps;
     }
@@ -139,7 +140,7 @@ namespace Workspaces {
         @statusCode
         statusCode: 204,
     }
-   
+
     @doc("Create workspace in tenant")
     @summary("Create workspace in tenant")
     @post op create(@body body: CreateWorkspaceRequest): CreateWorkspaceResponse | Problems.CommonProblems | Problems.Problem400;
