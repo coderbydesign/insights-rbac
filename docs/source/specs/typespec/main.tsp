@@ -85,7 +85,7 @@ namespace Problems {
     }
 }
 
-@route("/workspaces")
+@route("/workspaces/")
 @tag("Workspaces")
 @doc("Operations about workspaces")
 namespace Workspaces {
@@ -147,6 +147,7 @@ namespace Workspaces {
 
     @doc("Get a workspace in tenant")
     @summary("Get a workspace in tenant")
+    @route("{uuid}/")
     @get op read(
         @doc("Unique identification")
         @path uuid: UUID;
@@ -154,12 +155,14 @@ namespace Workspaces {
 
     @doc("Edit a workspace")
     @summary("Edit the workspace name or description")
+    @route("{uuid}/")
     @put op update(
         @doc("Unique identification")
         @path uuid: UUID;
         @body body: UpdateWorkspaceRequest
     ): UpdateWorkspaceResponse | Problems.CommonProblems | Problems.Problem400AlreadyExists ;
 
+    @route("{uuid}/")
     @patch op patch(
         @doc("Unique identification")
         @path uuid: UUID;
@@ -168,6 +171,7 @@ namespace Workspaces {
 
     @doc("Delete a workspace")
     @summary("Delete the workspace")
+    @route("{uuid}/")
     @delete op delete(
         @doc("Unique identification")
         @path uuid: UUID;
