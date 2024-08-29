@@ -33,12 +33,32 @@ class WorkspaceViewTests(IdentityRequest):
     def setUp(self):
         """Set up the audit log model tests."""
         super().setUp()
-        self.init_workspace_attributes = {
-            "name": "Init Workspace",
-            "description": "Init Workspace - description",
+        self.level_1_workspace_attributes = {
+            "name": "Level 1 Workspace",
+            "description": "Level 1 Workspace - description",
             "tenant_id": self.tenant.id,
         }
-        self.init_workspace = Workspace.objects.create(**self.init_workspace_attributes)
+        self.level_1_workspace = Workspace.objects.create(**self.level_1_workspace_attributes)
+
+        self.level_2a_workspace_attributes = {
+            "name": "Level 2a Workspace",
+            "tenant_id": self.tenant.id,
+            "parent_id": self.level_1_workspace.uuid,
+        }
+        self.level_2b_workspace_attributes = {
+            "name": "Level 2b Workspace",
+            "tenant_id": self.tenant.id,
+            "parent_id": self.level_1_workspace.uuid,
+        }
+        self.level_2a_workspace = Workspace.objects.create(**self.level_2a_workspace_attributes)
+        self.level_2b_workspace = Workspace.objects.create(**self.level_2b_workspace_attributes)
+
+        self.level_3a_workspace_attributes = {
+            "name": "Level 3a Workspace",
+            "tenant_id": self.tenant.id,
+            "parent_id": self.level_2a_workspace.uuid,
+        }
+        self.level_3a_workspace = Workspace.objects.create(**self.level_3a_workspace_attributes)
 
     def tearDown(self):
         """Tear down group model tests."""
@@ -126,12 +146,12 @@ class WorkspaceViewTests(IdentityRequest):
             "name": "New Workspace",
             "description": "New Workspace - description",
             "tenant_id": self.tenant.id,
-            "parent_id": self.init_workspace.uuid,
+            "parent_id": self.level_1_workspace.uuid,
         }
 
         Workspace.objects.create(**workspace_data)
 
-        test_data = {"name": "New Workspace", "parent_id": self.init_workspace.uuid}
+        test_data = {"name": "New Workspace", "parent_id": self.level_1_workspace.uuid}
 
         url = reverse("workspace-list")
         client = APIClient()
@@ -144,7 +164,7 @@ class WorkspaceViewTests(IdentityRequest):
             "name": "New Workspace",
             "description": "New Workspace - description",
             "tenant_id": self.tenant.id,
-            "parent_id": self.init_workspace.uuid,
+            "parent_id": self.level_1_workspace.uuid,
         }
 
         workspace = Workspace.objects.create(**workspace_data)
@@ -293,7 +313,7 @@ class WorkspaceViewTests(IdentityRequest):
         """Test for updating a workspace with empty body"""
         workspace = {}
 
-        url = reverse("workspace-detail", kwargs={"uuid": self.init_workspace.uuid})
+        url = reverse("workspace-detail", kwargs={"uuid": self.level_1_workspace.uuid})
         client = APIClient()
         response = client.put(url, workspace, format="json", **self.headers)
 
@@ -311,7 +331,7 @@ class WorkspaceViewTests(IdentityRequest):
             "name": "New Duplicate Workspace",
             "description": "New Duplicate Workspace - description",
             "tenant_id": self.tenant.id,
-            "parent_id": self.init_workspace.uuid,
+            "parent_id": self.level_1_workspace.uuid,
         }
 
         Workspace.objects.create(**workspace_data)
@@ -320,7 +340,7 @@ class WorkspaceViewTests(IdentityRequest):
             "name": "New Duplicate Workspace for Update",
             "description": "New Duplicate Workspace - description",
             "tenant_id": self.tenant.id,
-            "parent_id": self.init_workspace.uuid,
+            "parent_id": self.level_1_workspace.uuid,
         }
 
         workspace_for_update = Workspace.objects.create(**workspace_data_for_update)
@@ -331,7 +351,7 @@ class WorkspaceViewTests(IdentityRequest):
         workspace_data_for_put = {
             "name": "New Duplicate Workspace",
             "description": "New Duplicate Workspace - description",
-            "parent_id": self.init_workspace.uuid,
+            "parent_id": self.level_1_workspace.uuid,
         }
 
         response = client.put(url, workspace_data_for_put, format="json", **self.headers)
@@ -345,7 +365,7 @@ class WorkspaceViewTests(IdentityRequest):
         request = request_context["request"]
         headers = request.META
 
-        url = reverse("workspace-detail", kwargs={"uuid": self.init_workspace.uuid})
+        url = reverse("workspace-detail", kwargs={"uuid": self.level_1_workspace.uuid})
         client = APIClient()
         response = client.put(url, workspace, format="json", **headers)
 
@@ -357,14 +377,14 @@ class WorkspaceViewTests(IdentityRequest):
         self.assertEqual(status_code, 403)
 
     def test_get_workspace(self):
-        url = reverse("workspace-detail", kwargs={"uuid": self.init_workspace.uuid})
+        url = reverse("workspace-detail", kwargs={"uuid": self.level_1_workspace.uuid})
         client = APIClient()
         response = client.get(url, None, format="json", **self.headers)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertEqual(data.get("name"), "Init Workspace")
-        self.assertEquals(data.get("description"), "Init Workspace - description")
+        self.assertEqual(data.get("name"), "Level 1 Workspace")
+        self.assertEquals(data.get("description"), "Level 1 Workspace - description")
         self.assertNotEquals(data.get("uuid"), "")
         self.assertIsNotNone(data.get("uuid"))
         self.assertNotEquals(data.get("created"), "")
@@ -388,7 +408,7 @@ class WorkspaceViewTests(IdentityRequest):
         request = request_context["request"]
         headers = request.META
 
-        url = reverse("workspace-detail", kwargs={"uuid": self.init_workspace.uuid})
+        url = reverse("workspace-detail", kwargs={"uuid": self.level_1_workspace.uuid})
         client = APIClient()
         response = client.get(url, None, format="json", **headers)
 
@@ -433,7 +453,7 @@ class WorkspaceViewTests(IdentityRequest):
         request = request_context["request"]
         headers = request.META
 
-        url = reverse("workspace-detail", kwargs={"uuid": self.init_workspace.uuid})
+        url = reverse("workspace-detail", kwargs={"uuid": self.level_1_workspace.uuid})
         client = APIClient()
         response = client.delete(url, None, format="json", **headers)
 
@@ -442,3 +462,82 @@ class WorkspaceViewTests(IdentityRequest):
         detail = response.data.get("detail")
         self.assertEqual(detail, "You do not have permission to perform this action.")
         self.assertEqual(status_code, 403)
+
+    def test_get_workspaces_with_depth_non_int(self):
+        """Test that getting workspaces with depth fails with non-integer."""
+        url = f"{reverse('workspace-list')}?depth=foobar"
+        client = APIClient()
+        response = client.get(url, None, format="json", **self.headers)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data.get("detail"),
+            "foobar is not a valid depth value. Use -1 for all, or specify a positive integer value.",
+        )
+
+    def test_get_workspaces_with_depth_zero(self):
+        """Test that getting workspaces with depth fails with zero value."""
+        url = f"{reverse('workspace-list')}?depth=0"
+        client = APIClient()
+        response = client.get(url, None, format="json", **self.headers)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data.get("detail"),
+            "0 is not a valid depth value. Use -1 for all, or specify a positive integer value.",
+        )
+
+    def test_get_workspaces_with_depth_supplied(self):
+        """Test that getting workspaces with depth returns correct explicit depth level."""
+        client = APIClient()
+        depth_values = [
+            {"depth": "1", "workspace_count": 1, "workspace_uuids": [str(self.level_1_workspace.uuid)]},
+            {
+                "depth": "2",
+                "workspace_count": 3,
+                "workspace_uuids": [
+                    str(self.level_1_workspace.uuid),
+                    str(self.level_2a_workspace.uuid),
+                    str(self.level_2b_workspace.uuid),
+                ],
+            },
+            {
+                "depth": "3",
+                "workspace_count": 4,
+                "workspace_uuids": [
+                    str(self.level_1_workspace.uuid),
+                    str(self.level_2a_workspace.uuid),
+                    str(self.level_2b_workspace.uuid),
+                    str(self.level_3a_workspace.uuid),
+                ],
+            },
+        ]
+
+        for depth_value in depth_values:
+            url = f"{reverse('workspace-list')}?depth={depth_value.get('depth')}"
+            response = client.get(url, None, format="json", **self.headers)
+            workspace_uuids = [workspace["uuid"] for workspace in response.data.get("data")]
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data.get("data")), depth_value.get("workspace_count"))
+            self.assertCountEqual(workspace_uuids, depth_value.get("workspace_uuids"))
+
+    def test_get_workspaces_with_depth_default(self):
+        """Test that getting workspaces with depth returns correct default depth level (-1 or empty)."""
+        default_depth_values = ["?depth=-1", ""]
+        client = APIClient()
+
+        for depth_value in default_depth_values:
+            url = f"{reverse('workspace-list')}{depth_value}"
+            response = client.get(url, None, format="json", **self.headers)
+            workspace_uuids = [workspace["uuid"] for workspace in response.data.get("data")]
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data.get("data")), 4)
+            self.assertCountEqual(
+                workspace_uuids,
+                [
+                    str(self.level_1_workspace.uuid),
+                    str(self.level_2a_workspace.uuid),
+                    str(self.level_2b_workspace.uuid),
+                    str(self.level_3a_workspace.uuid),
+                ],
+            )
