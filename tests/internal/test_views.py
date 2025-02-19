@@ -817,8 +817,13 @@ class InternalViewsetTests(IdentityRequest):
         tuples.clear()
 
         tenant = Tenant.objects.create(org_id=org_id)
-        self.assertFalse(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.ROOT).exists())
-        self.assertFalse(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.DEFAULT).exists())
+        with self.assertRaises(Workspace.DoesNotExist) as root_assertion:
+            Workspace.objects.root(tenant=tenant)
+        self.assertEqual("Workspace matching query does not exist.", str(root_assertion.exception))
+
+        with self.assertRaises(Workspace.DoesNotExist) as default_assertion:
+            Workspace.objects.default(tenant=tenant)
+        self.assertEqual("Workspace matching query does not exist.", str(default_assertion.exception))
 
         response = self.client.post(
             f"/_private/api/utils/bootstrap_tenant/",
@@ -827,8 +832,8 @@ class InternalViewsetTests(IdentityRequest):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.ROOT).exists())
-        self.assertTrue(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.DEFAULT).exists())
+        self.assertIsNotNone(Workspace.objects.root(tenant=tenant))
+        self.assertIsNotNone(Workspace.objects.default(tenant=tenant))
         self.assertTrue(getattr(tenant, "tenant_mapping"))
         self.assertEqual(len(tuples), 9)
 
@@ -847,8 +852,13 @@ class InternalViewsetTests(IdentityRequest):
 
         for org_id in org_ids:
             tenant = Tenant.objects.create(org_id=org_id)
-            self.assertFalse(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.ROOT).exists())
-            self.assertFalse(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.DEFAULT).exists())
+            with self.assertRaises(Workspace.DoesNotExist) as root_assertion:
+                Workspace.objects.root(tenant=tenant)
+            self.assertEqual("Workspace matching query does not exist.", str(root_assertion.exception))
+
+            with self.assertRaises(Workspace.DoesNotExist) as default_assertion:
+                Workspace.objects.default(tenant=tenant)
+            self.assertEqual("Workspace matching query does not exist.", str(default_assertion.exception))
 
         response = self.client.post(
             f"/_private/api/utils/bootstrap_tenant/",
@@ -859,8 +869,8 @@ class InternalViewsetTests(IdentityRequest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         for org_id in org_ids:
             tenant = Tenant.objects.get(org_id=org_id)
-            self.assertTrue(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.ROOT).exists())
-            self.assertTrue(Workspace.objects.filter(tenant=tenant, type=Workspace.Types.DEFAULT).exists())
+            self.assertIsNotNone(Workspace.objects.root(tenant=tenant))
+            self.assertIsNotNone(Workspace.objects.default(tenant=tenant))
             self.assertTrue(getattr(tenant, "tenant_mapping"))
         self.assertEqual(
             len(tuples), 9 + 9 + 9

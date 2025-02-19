@@ -6085,9 +6085,7 @@ class GroupReplicationTests(IdentityRequest):
 
         # Check that the roles are now bound to the user in the target account (default workspace)
         # and the group
-        default_workspace_id = Workspace.objects.get(
-            tenant__org_id=self.tenant.org_id, type=Workspace.Types.DEFAULT
-        ).id
+        default_workspace_id = Workspace.objects.default(tenant=self.tenant).id
         default_bindings = self.relations.find_tuples(
             # Tuples for bindings to the default workspace
             all_of(resource("rbac", "workspace", default_workspace_id), relation("binding"))
@@ -6194,9 +6192,7 @@ class GroupReplicationTests(IdentityRequest):
 
         # Check that the roles are now bound to the user in the target account (default workspace)
         # and the group
-        default_workspace_id = Workspace.objects.get(
-            tenant__org_id=self.tenant.org_id, type=Workspace.Types.DEFAULT
-        ).id
+        default_workspace_id = Workspace.objects.default(tenant=self.tenant).id
         default_bindings = self.relations.find_tuples(
             # Tuples for bindings to the default workspace
             all_of(resource("rbac", "workspace", default_workspace_id), relation("binding"))
