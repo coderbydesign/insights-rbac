@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rbac-init
+  namespace: rbac-local
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: rbac-init
+          image: insights-rbac:local
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              cd /opt/rbac/rbac
+              echo "=== Running migrations ==="
+              python manage.py migrate
+              echo "=== Running seeds ==="
+              python manage.py seeds
+              echo "=== Provisioning test data ==="
+              python manage.py provision_test_data --clean
+              echo "=== Init complete ==="
+          envFrom:
+            - configMapRef:
+                name: rbac-config

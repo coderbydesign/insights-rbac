@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rbac-config
+  namespace: rbac-local
+data:
+  # Database
+  DATABASE_SERVICE_NAME: "POSTGRES_SQL"
+  DATABASE_ENGINE: "postgresql"
+  DATABASE_NAME: "postgres"
+  POSTGRES_SQL_SERVICE_HOST: "rbac-db"
+  POSTGRES_SQL_SERVICE_PORT: "5432"
+  DATABASE_HOST: "rbac-db"
+  DATABASE_PORT: "5432"
+  DATABASE_USER: "postgres"
+  DATABASE_PASSWORD: "postgres"
+
+  # App
+  API_PATH_PREFIX: "/api/rbac"
+  DJANGO_LOG_HANDLERS: "console"
+  DJANGO_READ_DOT_ENV_FILE: "False"
+
+  # Dev mode - bypasses authentication
+  DEVELOPMENT: "True"
+  BYPASS_BOP_VERIFICATION: "True"
+
+  # Redis
+  REDIS_HOST: "rbac-redis"
+
+  # Kafka - disabled by default
+  KAFKA_ENABLED: "False"
+
+  # Kessel - disabled by default, toggle to test integration
+  REPLICATION_TO_RELATION_ENABLED: "False"
+  # RELATION_API_SERVER: "kessel-relations:9000"
+  PRINCIPAL_USER_DOMAIN: "redhat"
+
+  # V2 config
+  SYSTEM_DEFAULT_ROOT_WORKSPACE_ROLE_UUID: "23592f00-71f7-482d-be2c-e82eeb704406"
+  SYSTEM_DEFAULT_TENANT_ROLE_UUID: "d8e9d8c6-1edf-41b8-951d-805e9e701f49"
+  SYSTEM_ADMIN_ROOT_WORKSPACE_ROLE_UUID: "411ef1a0-75a8-4765-8e9f-377297e8ee28"
+  SYSTEM_ADMIN_TENANT_ROLE_UUID: "a62b9113-593d-471b-96aa-971d6e748a9b"
+  WORKSPACE_HIERARCHY_DEPTH_LIMIT: "5"
+  WORKSPACE_ORG_CREATION_LIMIT: "20000000"
+  V2_APIS_ENABLED: "True"
+  V2_READ_ONLY_API_MODE: "False"
+  V2_BOOTSTRAP_TENANT: "True"
+  WORKSPACE_HIERARCHY_ENABLED: "True"
+
+  # Seeding
+  PERMISSION_SEEDING_ENABLED: "True"
+  ROLE_SEEDING_ENABLED: "True"
+  GROUP_SEEDING_ENABLED: "True"
+  ROLE_CREATE_ALLOW_LIST: "catalog,catalog_local_test,cost-management,remediations,inventory,drift,policies,advisor,approval,vulnerability,compliance,automation-analytics,notifications,patch,integrations,ros,staleness"

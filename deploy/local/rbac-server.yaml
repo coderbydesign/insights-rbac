@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rbac-server
+  namespace: rbac-local
+spec:
+  selector:
+    app: rbac-server
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rbac-server
+  namespace: rbac-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rbac-server
+  template:
+    metadata:
+      labels:
+        app: rbac-server
+    spec:
+      containers:
+        - name: rbac-server
+          image: insights-rbac:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: rbac-config
+          readinessProbe:
+            httpGet:
+              path: /api/rbac/v1/status/
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/rbac/v1/status/
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          env:
+            - name: POD_CPU_LIMIT
+              value: "1"
+            - name: GUNICORN_WORKER_MULTIPLIER
+              value: "2"
+            - name: GUNICORN_THREAD_LIMIT
+              value: "2"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"

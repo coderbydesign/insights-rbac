@@ -17,6 +17,8 @@
 
 """Custom RBAC Dev Middleware."""
 
+import hashlib
+
 from base64 import b64encode
 from json import dumps as json_dumps
 
@@ -36,6 +38,15 @@ class DevelopmentIdentityHeaderMiddleware(MiddlewareMixin):  # pylint: disable=t
         Args:
             request (object): The request object
 
+        Supports optional override headers for multi-tenant testing:
+            X-Dev-Org-Id: override org_id (default: 11111)
+            X-Dev-Account: override account_number (default: 10001)
+            X-Dev-Username: override username (default: user_dev)
+            X-Dev-Email: override email (default: user_dev@foo.com)
+            X-Dev-User-Id: override user_id (default: derived from username)
+            X-Dev-Is-Org-Admin: override is_org_admin, "true"/"false" (default: true)
+            X-Dev-Is-Internal: override is_internal, "true"/"false" (default: true)
+
         """
         if hasattr(request, "META"):
             user_type = request.headers.get("User-Type")
@@ -53,17 +64,26 @@ class DevelopmentIdentityHeaderMiddleware(MiddlewareMixin):  # pylint: disable=t
                     }
                 }
             else:
+                org_id = request.headers.get("X-Dev-Org-Id", "11111")
+                account = request.headers.get("X-Dev-Account", "10001")
+                username = request.headers.get("X-Dev-Username", "user_dev")
+                email = request.headers.get("X-Dev-Email", f"{username}@foo.com")
+                default_user_id = str(int(hashlib.sha256(username.encode()).hexdigest()[:8], 16))
+                user_id = request.headers.get("X-Dev-User-Id", default_user_id)
+                is_org_admin = request.headers.get("X-Dev-Is-Org-Admin", "true").lower() == "true"
+                is_internal = request.headers.get("X-Dev-Is-Internal", "true").lower() == "true"
+
                 identity_header = {
                     "identity": {
-                        "account_number": "10001",
-                        "org_id": "11111",
+                        "account_number": account,
+                        "org_id": org_id,
                         "type": "User",
                         "user": {
-                            "username": "user_dev",
-                            "email": "user_dev@foo.com",
-                            "is_org_admin": True,
-                            "is_internal": True,
-                            "user_id": "51736777",
+                            "username": username,
+                            "email": email,
+                            "is_org_admin": is_org_admin,
+                            "is_internal": is_internal,
+                            "user_id": user_id,
                         },
                         "internal": {"cross_access": False},
                     }
