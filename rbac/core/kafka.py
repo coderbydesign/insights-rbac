@@ -51,8 +51,8 @@ class RBACProducer:
                         if settings.KAFKA_AUTH:
                             self.producer = KafkaProducer(
                                 **settings.KAFKA_AUTH,
-                                enable_idempotence=True,  # Explicit: exactly-once delivery (kafka-python v3 default)
-                                acks='all',  # Explicit: wait for all replicas (kafka-python v3 default)
+                                enable_idempotence=True,  # Deduplicate producer retries (v3 default)
+                                acks="all",  # Wait for all in-sync replicas (v3 default)
                             )
                             logger.info("Kafka producer initialized successfully")
                             return self.producer
@@ -61,8 +61,8 @@ class RBACProducer:
                         else:
                             self.producer = KafkaProducer(
                                 bootstrap_servers=settings.KAFKA_SERVERS,
-                                enable_idempotence=True,  # Explicit: exactly-once delivery (kafka-python v3 default)
-                                acks='all',  # Explicit: wait for all replicas (kafka-python v3 default)
+                                enable_idempotence=True,  # Deduplicate producer retries (v3 default)
+                                acks="all",  # Wait for all in-sync replicas (v3 default)
                             )
                             return self.producer
                     except KafkaError as e:
