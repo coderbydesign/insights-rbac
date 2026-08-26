@@ -18,13 +18,13 @@
 
 from unittest.mock import patch
 
-from django.test import TestCase
 from rest_framework import status
 import requests
 
 from api.models import Tenant
 from management.principal.model import Principal
 from management.principal.proxy import PrincipalProxy
+from tests.identity_request import IdentityRequest
 
 
 class MockResponse:  # pylint: disable=too-few-public-methods
@@ -109,7 +109,7 @@ def mocked_requests_get_200_except(url, *args, **kwargs):  # pylint: disable=unu
     return MockResponse(url, json_response, status.HTTP_200_OK, exception=ValueError)
 
 
-class PrincipalProxyTest(TestCase):
+class PrincipalProxyTest(IdentityRequest):
     """Test PrincipalProxy object."""
 
     @patch(

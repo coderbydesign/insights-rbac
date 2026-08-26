@@ -223,9 +223,6 @@ class PrincipalProxy:  # pylint: disable=too-few-public-methods
         if response.status_code == status.HTTP_200_OK:
             """Testing if account numbers match"""
             try:
-                principal_list = []
-                if data:
-                    principal_list = data.get("users")
                 data = response.json()
                 # Log only non-PII summary at INFO (user count, usernames, user IDs).
                 # Full response contains email, first_name, last_name, address_string
@@ -237,9 +234,8 @@ class PrincipalProxy:  # pylint: disable=too-few-public-methods
                     _user_count = len(data) if isinstance(data, list) else None
                     _usernames = [u.get("username") for u in data] if isinstance(data, list) else []
                 LOGGER.info(
-                    "Response from BOP for org_id=%s, principals=%s — status=%s, user_count=%s, usernames=%s",
+                    "Response from BOP for org_id=%s — status=%s, user_count=%s, usernames=%s",
                     org_id,
-                    principal_list,
                     response.status_code,
                     _user_count,
                     _usernames,
