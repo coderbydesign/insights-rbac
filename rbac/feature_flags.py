@@ -22,21 +22,21 @@ import time
 from typing import Callable, Optional
 
 from UnleashClient import UnleashClient
-from UnleashClient.events import UnleashEvent, UnleashEventType
+from UnleashClient.events import BaseEvent, UnleashEventType
 from django.conf import settings
 from prometheus_client import Counter, Gauge
 
 logger = logging.getLogger(__name__)
 
-rbac_unleash_poll_total = Counter(
-    "rbac_unleash_poll_total",
-    "Total Unleash feature flag polls",
+rbac_unleash_fetch_total = Counter(
+    "rbac_unleash_fetch_total",
+    "Total successful Unleash feature flag fetches (excludes HTTP 304 Not Modified)",
     ["status"],
 )
 
-rbac_unleash_last_poll_timestamp = Gauge(
-    "rbac_unleash_last_poll_timestamp",
-    "Unix timestamp of the last successful Unleash poll",
+rbac_unleash_last_fetch_timestamp = Gauge(
+    "rbac_unleash_last_fetch_timestamp",
+    "Unix timestamp of the last successful Unleash feature flag fetch",
 )
 
 
@@ -85,11 +85,11 @@ class FeatureFlags:
                 self.client = None
 
     @staticmethod
-    def _on_unleash_event(event: UnleashEvent):
+    def _on_unleash_event(event: BaseEvent):
         """Handle Unleash SDK events for monitoring."""
         if event.event_type == UnleashEventType.FETCHED:
-            rbac_unleash_poll_total.labels(status="success").inc()
-            rbac_unleash_last_poll_timestamp.set(time.time())
+            rbac_unleash_fetch_total.labels(status="success").inc()
+            rbac_unleash_last_fetch_timestamp.set(time.time())
             logger.debug("Unleash feature flags fetched successfully")
 
     def _init_unleash_client(self):
