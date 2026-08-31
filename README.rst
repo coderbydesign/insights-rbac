@@ -386,7 +386,7 @@ For additional information please refer to Contributing_.
 
 .. _platformdocs: https://consoledot.pages.redhat.com/docs/dev/services/rbac.html
 .. _tutorial: https://www.postgresql.org/docs/10/static/tutorial-start.html
-.. _`Working with Openshift`: https://github.com/project-kessel/insights-rbac/blob/master/CONTRIBUTING.md
+.. _`Working with Openshift`: https://github.com/project-kessel/insights-rbac/tree/master/openshift
 .. _Contributing: https://github.com/project-kessel/insights-rbac/blob/master/CONTRIBUTING.md
 .. _insights-service-deployer: https://github.com/project-kessel/insights-service-deployer
 
